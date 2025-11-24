@@ -28,5 +28,61 @@ AIアシスタント向けにGitHub読み書き、ローカルメモ管理、技
 
 ## セットアップ
 
-（Training版のREADMEから流用）
-...
+### 1. リポジトリのクローン
+```bash
+git clone https://github.com/yuu-git/ateliers-ai-mcpserver.git
+cd ateliers-ai-mcpserver
+```
+
+### 2. Personal Access Token設定
+
+#### 2-1. GitHubでPATを作成
+
+1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+2. **Generate new token** をクリック
+3. 設定：
+   - **Token name**: `ateliers-ai-mcpserver`（任意）
+   - **Repository access**: Public repositories (All repositories)
+   - **Permissions**:
+     - **Contents**: Read and write
+     - **Metadata**: Read-only
+4. **Generate token** をクリック
+5. トークンをコピー（一度しか表示されません）
+
+#### 2-2. ローカル設定ファイル作成
+
+テンプレートをコピー：
+```bash
+cp appsettings.local.json.sample appsettings.local.json
+```
+
+**Windows (コマンドプロンプト)**:
+```cmd
+copy appsettings.local.json.sample appsettings.local.json
+```
+
+エディタで開いてPATを書き換え：
+```bash
+# VS Code
+code appsettings.local.json
+
+# Notepad
+notepad appsettings.local.json
+```
+
+内容:
+```json
+{
+  "GitHub": {
+    "PersonalAccessToken": "github_pat_11AAAAAA..." // コピーしたPATを貼り付け
+  }
+}
+```
+
+**注意**: `appsettings.local.json` は `.gitignore` で除外されており、Gitにコミットされません。
+
+### 3. ビルド
+```bash
+dotnet restore
+dotnet build
+```
