@@ -35,6 +35,9 @@ builder.Services.AddSingleton<GitHubService>();
 // NotesServiceをシングルトンとして登録
 builder.Services.AddSingleton<NotesService>();
 
+// GitHubNotesServiceを追加
+builder.Services.AddSingleton<GitHubNotesService>();
+
 // MCPサーバー設定
 builder.Services.AddMcpServer()
     .WithStdioServerTransport()
