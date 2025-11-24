@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11217.181
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SoIution Items", "SoIution Items", "{54AB608E-71DC-4A81-95CD-2F364A10D8D0}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ateliers.Ai.McpServer", "Ateliers.Ai.McpServer\Ateliers.Ai.McpServer.csproj", "{BB149D4F-3EFE-9B3A-1201-37BF24410804}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BB149D4F-3EFE-9B3A-1201-37BF24410804}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB149D4F-3EFE-9B3A-1201-37BF24410804}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB149D4F-3EFE-9B3A-1201-37BF24410804}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB149D4F-3EFE-9B3A-1201-37BF24410804}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C5704B26-CEDF-4E2A-A11E-F6A62A107546}
+	EndGlobalSection
+EndGlobal
