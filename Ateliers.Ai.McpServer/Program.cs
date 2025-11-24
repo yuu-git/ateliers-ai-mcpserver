@@ -20,7 +20,8 @@ var assemblyDirectory = Path.GetDirectoryName(assemblyLocation)!;
 builder.Configuration.Sources.Clear();
 builder.Configuration
     .SetBasePath(assemblyDirectory)
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
 
 // 設定をDIコンテナに登録
 builder.Services.Configure<AppSettings>(builder.Configuration);
