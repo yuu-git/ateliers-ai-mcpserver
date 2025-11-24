@@ -1,5 +1,7 @@
 ﻿{
   "GitHub": {
-    "PersonalAccessToken": "github_pat_ここにあなたのPATを貼り付けてください"
+    "AuthenticationMode": "PersonalAccessToken",
+    "PersonalAccessToken": "github_pat_ここにあなたのPATを貼り付けてください",
+    "CacheExpirationMinutes": 5
   }
 }

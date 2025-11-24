@@ -4,6 +4,10 @@ using Ateliers.Ai.McpServer.Services;
 
 namespace Ateliers.Ai.McpServer.Tools;
 
+/// <summary>
+/// AteliersAiMcpServer リポジトリ操作ツール
+/// </summary>
+[McpServerToolType]
 public class AteliersAiMcpServerTools
 {
     private readonly GitHubService _gitHubService;
@@ -23,7 +27,7 @@ public class AteliersAiMcpServerTools
         try
         {
             var files = await _gitHubService.ListFilesAsync(
-                "AteliersAiAssistants",
+                "AteliersAiMcpServer",
                 directory: ""
             );
 
