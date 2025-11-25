@@ -3,5 +3,22 @@
     "AuthenticationMode": "PersonalAccessToken",
     "PersonalAccessToken": "github_pat_ここにあなたのPATを貼り付けてください",
     "CacheExpirationMinutes": 5
+  },
+  "Repositories": {
+    "AteliersAiAssistants": {
+      "LocalPath": "{gitリポジトリのパス}\\ateliers-ai-assistants"
+    },
+    "AteliersAiMcpServer": {
+      "LocalPath": "{gitリポジトリのパス}\\ateliers-ai-mcpserver"
+    },
+    "AteliersDev": {
+      "LocalPath": "{gitリポジトリのパス}\\ateliers-dev"
+    },
+    "PublicNotes": {
+      "LocalPath": "{gitリポジトリのパス}\\ateliers-public-notes"
+    },
+    "TrainingMcpServer": {
+      "LocalPath": "{gitリポジトリのパス}\\ateliers-training-mcpserver-claude"
+    }
   }
 }

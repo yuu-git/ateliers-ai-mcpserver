@@ -18,11 +18,29 @@ public class AteliersDevTools
         _gitHubService = gitHubService;
     }
 
-    /// <summary>
-    /// Docusaurus記事を読み取る
-    /// </summary>
     [McpServerTool]
-    [Description("Read a technical article from ateliers.dev documentation")]
+    [Description(@"Read a technical article from ateliers.dev documentation. Automatically removes frontmatter.
+
+WHEN TO USE:
+- Reading technical articles from ateliers.dev
+- Accessing blog posts with frontmatter metadata
+- Need clean markdown content without YAML metadata
+- Referencing technical documentation
+
+DO NOT USE WHEN:
+- For non-article files (use read_repository_file instead)
+- Need to preserve frontmatter metadata
+- Reading from repositories other than AteliersDev
+
+EXAMPLES:
+✓ 'Read docs/csharp/datetime-extensions.md article'
+✓ 'Show me blog/2024-11-26-mcp-server-development.md'
+✓ 'Get docs/github-guidelines/branch-strategy.md'
+
+RELATED TOOLS:
+- list_articles: Find articles before reading
+- search_articles: Find articles by keyword
+- read_repository_file: Read files with frontmatter preserved")]
     public async Task<string> ReadArticle(
         [Description("Relative path to the article file (e.g., 'docs/csharp/datetime-extensions.md')")]
         string filePath)
@@ -46,11 +64,29 @@ public class AteliersDevTools
         }
     }
 
-    /// <summary>
-    /// 記事の一覧を取得
-    /// </summary>
     [McpServerTool]
-    [Description("List all technical articles in ateliers.dev documentation")]
+    [Description(@"List all technical articles in ateliers.dev documentation.
+
+WHEN TO USE:
+- Exploring available articles in docs or blog
+- Finding all markdown/mdx files
+- Discovering article structure
+- Browsing technical content
+
+DO NOT USE WHEN:
+- Need to search by keyword (use search_articles instead)
+- Working with non-article repositories
+- Already know exact file path (use read_article directly)
+
+EXAMPLES:
+✓ 'List all articles in docs directory'
+✓ 'Show all blog posts'
+✓ 'List docs/github-guidelines articles'
+
+RELATED TOOLS:
+- search_articles: Find articles by keyword
+- read_article: Read specific article
+- list_repository_files: For non-article file listing")]
     public async Task<string> ListArticles(
         [Description("Directory to search (default: 'docs', can also be 'blog')")]
         string directory = "docs")
@@ -85,15 +121,32 @@ public class AteliersDevTools
         }
     }
 
-    /// <summary>
-    /// キーワードで記事を検索
-    /// </summary>
     [McpServerTool]
-    [Description("Search technical articles by keyword in ateliers.dev documentation")]
+    [Description(@"Search technical articles by keyword in ateliers.dev documentation.
+
+WHEN TO USE:
+- Finding articles about specific topics
+- Searching for code examples or techniques
+- Discovering related content
+- Keyword-based content discovery
+
+DO NOT USE WHEN:
+- Already know exact article path (use read_article directly)
+- Need full text search across all files (use external search)
+- Searching in non-article repositories
+
+EXAMPLES:
+✓ 'Search for github actions articles'
+✓ 'Find articles about C# datetime'
+✓ 'Search docs for async programming'
+
+RELATED TOOLS:
+- list_articles: Browse all available articles
+- read_article: Read articles found in search results")]
     public async Task<string> SearchArticles(
         [Description("Keyword to search for in article titles and content")]
         string keyword,
-        [Description("Directory to search (default: 'docs')")]
+        [Description("Directory to search (default: 'docs', can also be 'blog')")]
         string directory = "docs")
     {
         try

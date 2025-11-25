@@ -1,0 +1,511 @@
+using ModelContextProtocol.Server;
+using System.ComponentModel;
+using Ateliers.Ai.McpServer.Services;
+using Ateliers.Ai.McpServer.Configuration;
+using Microsoft.Extensions.Options;
+
+namespace Ateliers.Ai.McpServer.Tools;
+
+/// <summary>
+/// 汎用リポジトリ操作ツール
+/// </summary>
+[McpServerToolType]
+public class RepositoryTools
+{
+    private readonly GitHubService _gitHubService;
+    private readonly LocalFileService _localFileService;
+    private readonly AppSettings _settings;
+
+    public RepositoryTools(
+        GitHubService gitHubService,
+        LocalFileService localFileService,
+        IOptions<AppSettings> settings)
+    {
+        _gitHubService = gitHubService;
+        _localFileService = localFileService;
+        _settings = settings.Value;
+    }
+
+    [McpServerTool]
+    [Description(@"Read a file from any configured repository (local or GitHub).
+
+WHEN TO USE:
+- Need to read source code files
+- Need to read documentation or markdown files
+- Need to inspect configuration files
+- Need to analyze existing code before making changes
+
+DO NOT USE WHEN:
+- For article-specific operations (use read_article from AteliersDevTools)
+- File doesn't exist yet (use add_repository_file to create)
+
+AVAILABLE REPOSITORIES:
+- AteliersAiAssistants: Coding guidelines and training samples
+- AteliersAiMcpServer: MCP server source code
+- AteliersDev: Technical articles and blog posts
+- PublicNotes: TODO, ideas, and snippets
+- TrainingMcpServer: Training MCP server code
+
+EXAMPLES:
+✓ 'Read Services/GitHubService.cs from AteliersAiMcpServer'
+✓ 'Show me README.md from AteliersAiAssistants'
+✓ 'Get appsettings.json from AteliersAiMcpServer'
+
+RELATED TOOLS:
+- list_repository_files: Find files before reading
+- edit_repository_file: Modify after reading
+- read_article: For ateliers.dev articles with frontmatter removal")]
+    public async Task<string> ReadRepositoryFile(
+        [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
+        string repositoryKey,
+        [Description("File path (e.g., 'README.md', 'Services/GitHubService.cs')")]
+        string filePath)
+    {
+        try
+        {
+            if (!_settings.Repositories.TryGetValue(repositoryKey, out var repoSettings))
+            {
+                return $"❌ Repository '{repositoryKey}' not found";
+            }
+
+            // ローカル優先
+            if (!string.IsNullOrEmpty(repoSettings.LocalPath))
+            {
+                var content = await _localFileService.ReadFileAsync(repoSettings.LocalPath, filePath);
+                return content;
+            }
+
+            // GitHubフォールバック
+            return await _gitHubService.GetFileContentAsync(repositoryKey, filePath);
+        }
+        catch (FileNotFoundException ex)
+        {
+            return $"❌ {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error: {ex.Message}";
+        }
+    }
+
+    [McpServerTool]
+    [Description(@"List files in any configured repository (local or GitHub).
+
+WHEN TO USE:
+- Need to explore repository structure
+- Need to find specific files before reading
+- Need to see available files in a directory
+- Need to filter files by extension
+
+DO NOT USE WHEN:
+- For article discovery (use list_articles from AteliersDevTools)
+- When exact file path is already known
+
+AVAILABLE REPOSITORIES:
+- AteliersAiAssistants: Coding guidelines and training samples
+- AteliersAiMcpServer: MCP server source code
+- AteliersDev: Technical articles and blog posts
+- PublicNotes: TODO, ideas, and snippets
+- TrainingMcpServer: Training MCP server code
+
+EXAMPLES:
+✓ 'List all markdown files in AteliersAiAssistants'
+✓ 'Show C# files in AteliersAiMcpServer Services directory'
+✓ 'List all files in AteliersDev docs directory'
+
+RELATED TOOLS:
+- read_repository_file: Read files after listing
+- search_articles: For keyword-based article search")]
+    public async Task<string> ListRepositoryFiles(
+        [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
+        string repositoryKey,
+        [Description("Directory path (empty for root, e.g., 'Services', 'docs')")]
+        string directory = "",
+        [Description("File extension filter (e.g., '.md', '.cs', leave empty for all)")]
+        string? extension = null)
+    {
+        try
+        {
+            if (!_settings.Repositories.TryGetValue(repositoryKey, out var repoSettings))
+            {
+                return $"❌ Repository '{repositoryKey}' not found";
+            }
+
+            List<string> files;
+
+            // ローカル優先
+            if (!string.IsNullOrEmpty(repoSettings.LocalPath))
+            {
+                files = await _localFileService.ListFilesAsync(repoSettings.LocalPath, directory, extension);
+            }
+            else
+            {
+                // GitHubフォールバック
+                files = await _gitHubService.ListFilesAsync(repositoryKey, directory, extension);
+            }
+
+            if (files.Count == 0)
+            {
+                return $"📁 No files found in {repositoryKey}/{directory}";
+            }
+
+            var fileList = string.Join("\n", files.OrderBy(f => f));
+            return $"📁 Files in {repositoryKey}/{directory} ({files.Count} files):\n\n{fileList}";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error: {ex.Message}";
+        }
+    }
+
+    [McpServerTool]
+    [Description(@"Add a new file to a configured repository (local only).
+
+WHEN TO USE:
+- Creating new source code files
+- Creating new documentation files
+- Creating new configuration files
+- Generating new test files
+
+DO NOT USE WHEN:
+- File already exists (use edit_repository_file instead)
+- Repository LocalPath not configured
+- Need to commit directly to GitHub (requires Git integration)
+
+EXAMPLES:
+✓ 'Create test.txt in AteliersAiMcpServer with content Hello World'
+✓ 'Add new guideline file guidelines/python/naming.md to AteliersAiAssistants'
+✓ 'Create Services/NewService.cs in AteliersAiMcpServer'
+
+RELATED TOOLS:
+- edit_repository_file: Modify existing files
+- read_repository_file: Verify file contents after creation
+- list_repository_files: Check if file already exists")]
+    public async Task<string> AddRepositoryFile(
+        [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
+        string repositoryKey,
+        [Description("File path (e.g., 'test.txt', 'Services/NewService.cs')")]
+        string filePath,
+        [Description("File content")]
+        string content)
+    {
+        try
+        {
+            if (!_settings.Repositories.TryGetValue(repositoryKey, out var repoSettings))
+            {
+                return $"❌ Repository '{repositoryKey}' not found";
+            }
+
+            if (string.IsNullOrEmpty(repoSettings.LocalPath))
+            {
+                return $"❌ LocalPath not configured for '{repositoryKey}'";
+            }
+
+            await _localFileService.CreateFileAsync(repoSettings.LocalPath, filePath, content);
+            return $"✅ Created: {filePath}";
+        }
+        catch (InvalidOperationException ex)
+        {
+            return $"❌ {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error: {ex.Message}";
+        }
+    }
+
+    [McpServerTool]
+    [Description(@"Edit an existing file in a configured repository (local only). Automatically creates backup.
+
+WHEN TO USE:
+- Modifying existing source code
+- Updating documentation
+- Fixing bugs in existing files
+- Refactoring code
+
+DO NOT USE WHEN:
+- File doesn't exist yet (use add_repository_file instead)
+- Repository LocalPath not configured
+- Need to commit directly to GitHub (requires Git integration)
+
+EXAMPLES:
+✓ 'Update README.md in AteliersAiMcpServer with new content'
+✓ 'Fix bug in Services/GitHubService.cs'
+✓ 'Modify appsettings.json configuration'
+
+RELATED TOOLS:
+- read_repository_file: Read current contents before editing
+- backup_repository_file: Create additional backup if needed
+- add_repository_file: Create new files")]
+    public async Task<string> EditRepositoryFile(
+        [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
+        string repositoryKey,
+        [Description("File path (e.g., 'README.md', 'Services/GitHubService.cs')")]
+        string filePath,
+        [Description("New file content (replaces entire file)")]
+        string content)
+    {
+        try
+        {
+            if (!_settings.Repositories.TryGetValue(repositoryKey, out var repoSettings))
+            {
+                return $"❌ Repository '{repositoryKey}' not found";
+            }
+
+            if (string.IsNullOrEmpty(repoSettings.LocalPath))
+            {
+                return $"❌ LocalPath not configured for '{repositoryKey}'";
+            }
+
+            await _localFileService.UpdateFileAsync(repoSettings.LocalPath, filePath, content, createBackup: true);
+            return $"✅ Updated: {filePath}";
+        }
+        catch (FileNotFoundException ex)
+        {
+            return $"❌ {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error: {ex.Message}";
+        }
+    }
+
+    [McpServerTool]
+    [Description(@"Delete a file from a configured repository (local only). Automatically creates backup.
+
+WHEN TO USE:
+- Removing obsolete files
+- Cleaning up temporary files
+- Removing test files
+- Deleting backup files (.backup extension doesn't create backup)
+
+DO NOT USE WHEN:
+- Repository LocalPath not configured
+- File might be needed later (use rename_repository_file to archive instead)
+- Unsure about file importance (create manual backup first)
+
+EXAMPLES:
+✓ 'Delete test.txt from AteliersAiMcpServer'
+✓ 'Remove obsolete Service/OldService.cs'
+✓ 'Clean up test.txt.backup file'
+
+RELATED TOOLS:
+- backup_repository_file: Create backup before deleting
+- rename_repository_file: Move to archive instead of deleting
+- list_repository_files: Verify file exists before deleting")]
+    public async Task<string> DeleteRepositoryFile(
+        [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
+        string repositoryKey,
+        [Description("File path (e.g., 'test.txt', 'Services/OldService.cs')")]
+        string filePath)
+    {
+        try
+        {
+            if (!_settings.Repositories.TryGetValue(repositoryKey, out var repoSettings))
+            {
+                return $"❌ Repository '{repositoryKey}' not found";
+            }
+
+            if (string.IsNullOrEmpty(repoSettings.LocalPath))
+            {
+                return $"❌ LocalPath not configured for '{repositoryKey}'";
+            }
+
+            _localFileService.DeleteFile(repoSettings.LocalPath, filePath, createBackup: true);
+            
+            // .backupファイルかどうかでメッセージを変える
+            var message = filePath.EndsWith(".backup")
+                ? $"✅ Deleted: {filePath}"
+                : $"✅ Deleted: {filePath} (backup created)";
+            
+            return await Task.FromResult(message);
+        }
+        catch (FileNotFoundException ex)
+        {
+            return $"❌ {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error: {ex.Message}";
+        }
+    }
+
+    [McpServerTool]
+    [Description(@"Rename a file in a configured repository (local only).
+
+WHEN TO USE:
+- Renaming files to follow naming conventions
+- Moving files to different directories
+- Archiving files without deleting
+- Reorganizing project structure
+
+DO NOT USE WHEN:
+- Repository LocalPath not configured
+- Destination file already exists
+- Want to keep both old and new (use copy_repository_file instead)
+
+EXAMPLES:
+✓ 'Rename OldService.cs to NewService.cs in AteliersAiMcpServer'
+✓ 'Move test.txt to archive/test.txt'
+✓ 'Rename guideline.md to guidelines/csharp/naming.md'
+
+RELATED TOOLS:
+- copy_repository_file: Keep original file while creating new
+- delete_repository_file: Remove after renaming
+- list_repository_files: Verify new path doesn't exist")]
+    public async Task<string> RenameRepositoryFile(
+        [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
+        string repositoryKey,
+        [Description("Current file path (e.g., 'OldService.cs')")]
+        string oldFilePath,
+        [Description("New file path (e.g., 'Services/NewService.cs')")]
+        string newFilePath)
+    {
+        try
+        {
+            if (!_settings.Repositories.TryGetValue(repositoryKey, out var repoSettings))
+            {
+                return $"❌ Repository '{repositoryKey}' not found";
+            }
+
+            if (string.IsNullOrEmpty(repoSettings.LocalPath))
+            {
+                return $"❌ LocalPath not configured for '{repositoryKey}'";
+            }
+
+            _localFileService.RenameFile(repoSettings.LocalPath, oldFilePath, newFilePath);
+            return await Task.FromResult($"✅ Renamed: {oldFilePath} → {newFilePath}");
+        }
+        catch (FileNotFoundException ex)
+        {
+            return $"❌ {ex.Message}";
+        }
+        catch (InvalidOperationException ex)
+        {
+            return $"❌ {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error: {ex.Message}";
+        }
+    }
+
+    [McpServerTool]
+    [Description(@"Copy a file within a configured repository (local only).
+
+WHEN TO USE:
+- Creating file templates or boilerplate
+- Duplicating configuration files for different environments
+- Creating backup before major modifications
+- Generating similar files with variations
+
+DO NOT USE WHEN:
+- Repository LocalPath not configured
+- Destination file exists and overwrite=false
+- Want to move file (use rename_repository_file instead)
+
+EXAMPLES:
+✓ 'Copy template.md to new-guideline.md in AteliersAiAssistants'
+✓ 'Copy appsettings.json to appsettings.Development.json'
+✓ 'Duplicate Services/BaseService.cs to Services/NewService.cs'
+
+RELATED TOOLS:
+- rename_repository_file: Move instead of copy
+- backup_repository_file: Create timestamped backup
+- edit_repository_file: Modify after copying")]
+    public async Task<string> CopyRepositoryFile(
+        [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
+        string repositoryKey,
+        [Description("Source file path (e.g., 'template.md')")]
+        string sourceFilePath,
+        [Description("Destination file path (e.g., 'new-file.md')")]
+        string destFilePath,
+        [Description("Overwrite if destination exists (default: false)")]
+        bool overwrite = false)
+    {
+        try
+        {
+            if (!_settings.Repositories.TryGetValue(repositoryKey, out var repoSettings))
+            {
+                return $"❌ Repository '{repositoryKey}' not found";
+            }
+
+            if (string.IsNullOrEmpty(repoSettings.LocalPath))
+            {
+                return $"❌ LocalPath not configured for '{repositoryKey}'";
+            }
+
+            _localFileService.CopyFile(repoSettings.LocalPath, sourceFilePath, destFilePath, overwrite);
+            return await Task.FromResult($"✅ Copied: {sourceFilePath} → {destFilePath}");
+        }
+        catch (FileNotFoundException ex)
+        {
+            return $"❌ {ex.Message}";
+        }
+        catch (InvalidOperationException ex)
+        {
+            return $"❌ {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error: {ex.Message}";
+        }
+    }
+
+    [McpServerTool]
+    [Description(@"Create a backup of a file in a configured repository (local only).
+
+WHEN TO USE:
+- Before making risky modifications
+- Creating timestamped snapshots
+- Preserving important file versions
+- Manual backup before automated operations
+
+DO NOT USE WHEN:
+- Repository LocalPath not configured
+- File doesn't exist
+- edit_repository_file already creates automatic backups
+
+EXAMPLES:
+✓ 'Backup appsettings.json with suffix 2024-11-26'
+✓ 'Create backup of Services/ImportantService.cs'
+✓ 'Backup README.md before major rewrite'
+
+RELATED TOOLS:
+- edit_repository_file: Auto-creates .backup when editing
+- copy_repository_file: Create named copies
+- delete_repository_file: Auto-creates backup when deleting")]
+    public async Task<string> BackupRepositoryFile(
+        [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
+        string repositoryKey,
+        [Description("File path (e.g., 'README.md', 'Services/GitHubService.cs')")]
+        string filePath,
+        [Description("Optional backup suffix (default: .backup)")]
+        string? backupSuffix = null)
+    {
+        try
+        {
+            if (!_settings.Repositories.TryGetValue(repositoryKey, out var repoSettings))
+            {
+                return $"❌ Repository '{repositoryKey}' not found";
+            }
+
+            if (string.IsNullOrEmpty(repoSettings.LocalPath))
+            {
+                return $"❌ LocalPath not configured for '{repositoryKey}'";
+            }
+
+            _localFileService.BackupFile(repoSettings.LocalPath, filePath, backupSuffix);
+            var backupName = backupSuffix != null ? $"{filePath}.{backupSuffix}" : $"{filePath}.backup";
+            return await Task.FromResult($"✅ Backup created: {backupName}");
+        }
+        catch (FileNotFoundException ex)
+        {
+            return $"❌ {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error: {ex.Message}";
+        }
+    }
+}

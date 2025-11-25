@@ -29,14 +29,11 @@ builder.Services.Configure<AppSettings>(builder.Configuration);
 // メモリキャッシュを追加
 builder.Services.AddMemoryCache();
 
-// GitHubServiceをシングルトンとして登録
+// Serviceをシングルトンとして登録
 builder.Services.AddSingleton<GitHubService>();
-
-// NotesServiceをシングルトンとして登録
 builder.Services.AddSingleton<NotesService>();
-
-// GitHubNotesServiceを追加
 builder.Services.AddSingleton<GitHubNotesService>();
+builder.Services.AddSingleton<LocalFileService>();
 
 // MCPサーバー設定
 builder.Services.AddMcpServer()
