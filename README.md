@@ -1,7 +1,7 @@
 # Ateliers AI MCP Server
 
 C#/.NETで実装したModel Context Protocol（MCP）サーバー。
-Claude Desktop向けに**GitHub/ローカルファイル統合操作**と**技術記事参照**を提供。
+複数のIDEとAIクライアントから**GitHub/ローカルファイル統合操作**と**技術記事参照**を提供。
 
 ---
 
@@ -23,17 +23,34 @@ Claude Desktop向けに**GitHub/ローカルファイル統合操作**と**技�
 
 ## 概要
 
-ateliers.devの技術資産（コーディングガイドライン、技術記事、開発リポジトリ）をClaude Desktopから直接参照・編集できるMCPサーバー。
+ateliers.devの技術資産（コーディングガイドライン、技術記事、開発リポジトリ）を複数のIDEから直接参照・編集できるMCPサーバー。
 
 ### 主な特徴
 
+- ✅ **マルチクライアント対応** - Claude Desktop、VS Code、Visual Studioから同じツールを使用可能
 - ✅ **ローカル優先アクセス** - LocalPath設定時は高速なローカルファイル操作、未設定時はGitHub API経由
 - ✅ **Git統合** - AutoPull/AutoPush対応、ファイル変更の自動コミット＆プッシュ
 - ✅ **汎用ファイル操作** - 読み取り/書き込み/削除/リネーム/コピー/バックアップの完全CRUD
 - ✅ **記事専門ツール** - ateliers.dev技術記事の検索・一覧・読み取り（Frontmatter自動除去）
 - ✅ **複数リポジトリ対応** - 設定ファイルで柔軟なリポジトリ管理
 
+### 対応クライアント
+
+| クライアント | バージョン | ステータス |
+|:--|:--|:--|
+| Claude Desktop | 最新版 | ✅ 完全サポート |
+| VS Code | 1.102+ | ✅ Agent Mode対応 |
+| Visual Studio | 2022 17.14+ / 2026 Preview | ✅ Agent Mode対応 |
+
 ## バージョン履歴
+
+### v0.6.0（2024-11-29）
+- **Phase 6完了**: マルチクライアント統合
+- VS Code統合（Agent Mode、相対パス対応）
+- Visual Studio統合（Agent Mode、セキュリティ強化）
+- Claude Desktop統合確認
+- 各クライアント用セットアップガイド作成
+- `.vscode/mcp.json.sample` と `.mcp.json.sample` の提供
 
 ### v0.5.0（2024-11-28）
 - **Phase 5完了**: Git操作統合
@@ -71,6 +88,18 @@ ateliers.devの技術資産（コーディングガイドライン、技術記�
 
 ## 機能一覧
 
+### GitTools（Git操作）
+
+| ツール | 機能 |
+|:--|:--|
+| `commit_repository` | リポジトリの変更をコミット |
+| `push_repository` | コミットをリモートにプッシュ |
+| `pull_repository` | リモートから最新を取得 |
+| `commit_and_push_repository` | コミット＆プッシュを一括実行 |
+| `create_tag` | Gitタグを作成 |
+| `push_tag` | タグをリモートにプッシュ |
+| `create_and_push_tag` | タグ作成＆プッシュを一括実行 |
+
 ### RepositoryTools（汎用ファイル操作 + Git統合）
 
 | ツール | 機能 | Git統合 |
@@ -94,12 +123,15 @@ ateliers.devの技術資産（コーディングガイドライン、技術記�
 
 ## 前提条件
 
-- .NET 10.0 SDK
-- Claude Desktop
+- .NET 8.0 SDK以降
 - Git（AutoPull/AutoPush使用時）
 - GitHub Personal Access Token（オプション：GitHub API/Git Push使用時）
+- 以下のいずれかのクライアント：
+  - Claude Desktop（最新版）
+  - VS Code（1.102以降）+ GitHub Copilot拡張機能
+  - Visual Studio 2022（17.14以降）または 2026 Preview + GitHub Copilot
 
-## セットアップ
+## クイックスタート
 
 ### 1. リポジトリのクローン
 
@@ -108,129 +140,32 @@ git clone https://github.com/yuu-git/ateliers-ai-mcpserver.git
 cd ateliers-ai-mcpserver
 ```
 
-### 2. 設定ファイルの作成
+### 2. 設定ファイルの作成（任意）
 
-#### 2-1. appsettings.local.json作成
+基本的な動作にはローカル設定は不要ですが、ローカルファイルアクセスやGit統合を使用する場合は `appsettings.local.json` を作成してください。
 
-テンプレートをコピー：
+詳細は各クライアントのセットアップガイドを参照してください。
 
-```bash
-# Linux/macOS
-cp Ateliers.Ai.McpServer/appsettings.local.json.sample Ateliers.Ai.McpServer/appsettings.local.json
+### 3. クライアント別セットアップ
 
-# Windows (PowerShell)
-Copy-Item Ateliers.Ai.McpServer/appsettings.local.json.sample Ateliers.Ai.McpServer/appsettings.local.json
-```
+使用するクライアントに応じて、以下のガイドを参照してください：
 
-#### 2-2. LocalPath設定（推奨）
+#### Claude Desktop
+- 📖 [Claude Desktopセットアップガイド](Docs/setup/claude-desktop.md)
+- フルパス設定が必要
+- dotnet run方式またはビルド済みexe方式
 
-ローカルファイルシステムから高速アクセスしたい場合は、LocalPathを設定：
+#### VS Code
+- 📖 [VS Codeセットアップガイド](Docs/setup/vscode.md)
+- `.vscode/mcp.json.sample` をコピーして使用
+- 相対パス対応
+- Agent Mode必須
 
-```json
-{
-  "Repositories": {
-    "PublicNotes": {
-      "LocalPath": "C:\\Projects\\OnlineRepos\\yuu-git\\ateliers-public-notes",
-      "AutoPull": true,
-      "AutoPush": true
-    }
-  }
-}
-```
-
-**メリット:**
-- 10-5000倍高速なファイルアクセス
-- GitHub APIレート制限の回避
-- リアルタイムな編集フィードバック
-- Git統合による自動コミット＆プッシュ
-
-#### 2-3. Git設定（AutoPull/AutoPush使用時）
-
-Git統合を使用する場合、認証情報を設定：
-
-**グローバル設定（推奨）:**
-
-```json
-{
-  "GitHub": {
-    "Token": "github_pat_11AAAAAA...",
-    "Email": "your-email@example.com",
-    "Username": "your-github-username"
-  }
-}
-```
-
-**リポジトリ固有設定（オプション）:**
-
-```json
-{
-  "Repositories": {
-    "PublicNotes": {
-      "GitHubToken": "github_pat_notes_specific_token",
-      "GitEmail": "notes@example.com",
-      "GitUsername": "your-username",
-      "AutoPull": true,
-      "AutoPush": true
-    }
-  }
-}
-```
-
-**認証情報の優先順位:**
-1. リポジトリ固有のToken/Email/Username
-2. グローバルのToken/Email/Username
-
-**注意**: `appsettings.local.json` は `.gitignore` で除外されており、Gitにコミットされません。
-
-### 3. ビルド
-
-```bash
-dotnet restore
-dotnet build --configuration Release
-```
-
-### 4. Claude Desktop設定
-
-Claude Desktopの設定ファイル（`claude_desktop_config.json`）にMCPサーバーを追加：
-
-**設定ファイルの場所:**
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-**設定例:**
-
-```json
-{
-  "mcpServers": {
-    "ateliers-mcp-server": {
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "C:\\Projects\\OnlineRepos\\yuu-git\\ateliers-ai-mcpserver\\Ateliers.Ai.McpServer\\Ateliers.Ai.McpServer.csproj",
-        "--configuration",
-        "Release"
-      ]
-    }
-  }
-}
-```
-
-**または実行ファイルを直接指定:**
-
-```json
-{
-  "mcpServers": {
-    "ateliers-mcp-server": {
-      "command": "C:\\Projects\\OnlineRepos\\yuu-git\\ateliers-ai-mcpserver\\Ateliers.Ai.McpServer\\bin\\Release\\net10.0\\Ateliers.Ai.McpServer.exe"
-    }
-  }
-}
-```
-
-### 5. Claude Desktop再起動
-
-Claude Desktopを再起動すると、MCPサーバーが利用可能になります。
+#### Visual Studio
+- 📖 [Visual Studioセットアップガイド](Docs/setup/visual-studio.md)
+- `.mcp.json.sample` をコピーして使用
+- 相対パス対応
+- Agent Mode推奨
 
 ## 使い方
 
@@ -240,7 +175,7 @@ Claude Desktopを再起動すると、MCPサーバーが利用可能になりま
 Services/GitHubService.cs を読んで
 ```
 
-Claude が自動的に `read_repository_file` ツールを使用します。
+AIが自動的に `read_repository_file` ツールを使用します。
 
 ### ファイル編集（Git統合）
 
@@ -248,7 +183,7 @@ Claude が自動的に `read_repository_file` ツールを使用します。
 README.mdのバージョン履歴を更新して
 ```
 
-AutoPush=true の場合、Claude が以下を実行：
+AutoPush=true の場合、AIが以下を実行：
 1. AutoPull確認→リモートの最新を取得
 2. `read_repository_file` でREADME.mdを読み取り
 3. 内容を更新
@@ -261,69 +196,74 @@ AutoPush=true の場合、Claude が以下を実行：
 GitHub Actionsに関する記事を探して
 ```
 
-Claude が `search_articles` で記事を検索し、関連記事を提示します。
+AIが `search_articles` で記事を検索し、関連記事を提示します。
 
-## Git統合機能
+### マルチクライアント活用例
 
-### AutoPull/AutoPush
+```
+1. Claude Desktopで設計・仕様検討
+2. VS Codeで実装
+3. Visual StudioでデバッグとCodeLens活用
+   ↓
+すべてのクライアントから同じMCPツールを使用
+```
 
-リポジトリごとに設定可能：
+## 高度な設定
+
+### ローカルファイルアクセス（LocalPath）
+
+高速なローカルファイルアクセスを有効にするには、`appsettings.local.json` を作成：
 
 ```json
 {
   "Repositories": {
     "PublicNotes": {
-      "AutoPull": true,   // 書き込み前に自動プル
-      "AutoPush": true    // 書き込み後に自動プッシュ
+      "LocalPath": "[YOUR_CLONE_PATH]\\ateliers-public-notes",
+      "AutoPull": true,
+      "AutoPush": true
     }
   }
 }
 ```
 
-### コンフリクト処理
+**メリット:**
+- 10-5000倍高速なファイルアクセス
+- GitHub APIレート制限の回避
+- リアルタイムな編集フィードバック
 
-マージコンフリクト検出時はエラーで停止し、手動解決を促します：
+### Git統合（AutoPull/AutoPush）
 
+認証情報を設定してGit操作を自動化：
+
+```json
+{
+  "GitHub": {
+    "Token": "github_pat_11AAAAAA...",
+    "Email": "your-email@example.com",
+    "Username": "your-github-username"
+  },
+  "Repositories": {
+    "PublicNotes": {
+      "AutoPull": true,
+      "AutoPush": true
+    }
+  }
+}
 ```
-❌ Pull failed: Merge conflict detected. Please resolve manually:
-1. Navigate to repository
-2. Run: git status
-3. Resolve conflicts
-4. Run: git add . && git commit
-```
-
-### コミットメッセージ
-
-デフォルト: `Update {filePath} via MCP`
-
-将来的にカスタマイズ可能な実装予定。
 
 ## トラブルシューティング
 
-### MCPサーバーが認識されない
+### 共通の問題
 
-1. Claude Desktopを完全に再起動
-2. `claude_desktop_config.json` のパスが正しいか確認
-3. ビルドエラーがないか確認
+- 📖 [トラブルシューティングガイド](Docs/troubleshooting.md)
 
-### ファイルが読み取れない
+### クライアント別の問題
 
-1. `appsettings.local.json` のLocalPathが正しいか確認
-2. GitHub API使用時はPATが設定されているか確認
-3. ファイルパスが正しいか確認（相対パスで指定）
+各クライアントのセットアップガイド内にトラブルシューティングセクションがあります：
 
-### Git Push が失敗する
-
-1. GitHub Token が正しく設定されているか確認
-2. Tokenに Contents: Write 権限があるか確認
-3. リポジトリがGitで初期化されているか確認
-4. リモートブランチが設定されているか確認（`git remote -v`）
-
-### ツールが見つからない
-
-1. Claude Desktopを再起動
-2. 最新版にビルドし直す
-3. ログを確認（`%APPDATA%\Claude\logs\`）
+- [Claude Desktop トラブルシューティング](Docs/setup/claude-desktop.md#トラブルシューティング)
+- [VS Code トラブルシューティング](Docs/setup/vscode.md#トラブルシューティング)
+- [Visual Studio トラブルシューティング](Docs/setup/visual-studio.md#トラブルシューティング)
 
 ## 開発
 
@@ -338,6 +278,7 @@ Ateliers.Ai.McpServer/
 │  ├─ LocalFileService.cs     # ローカルファイル操作
 │  └─ GitOperationService.cs  # Git操作（Pull/Commit/Push）
 ├─ Tools/
+│  ├─ GitTools.cs             # Git操作ツール（Phase 5）
 │  ├─ RepositoryTools.cs      # 汎用ファイル操作ツール（Git統合）
 │  └─ AteliersDevTools.cs     # 記事専門ツール
 ├─ Program.cs                 # エントリーポイント
@@ -358,6 +299,22 @@ dotnet run --project Ateliers.Ai.McpServer
 dotnet test
 ```
 
+## ドキュメント
+
+### セットアップガイド
+
+- [Claude Desktop](Docs/setup/claude-desktop.md)
+- [VS Code](Docs/setup/vscode.md)
+- [Visual Studio](Docs/setup/visual-studio.md)
+
+### Phase計画
+
+- [Phase 5: Git統合](Docs/phases/phase5-handover.md)
+- [Phase 6: マルチクライアント統合](Docs/phases/phase6-plan.md)
+- [Phase 7: Notion基礎統合](Docs/phases/phase7-plan.md)（計画中）
+- [Phase 8: Notion拡張](Docs/phases/phase8-plan.md)（計画中）
+- [Phase 9: Docusaurus統合](Docs/phases/phase9-plan.md)（計画中）
+
 ## ライセンス
 
 MIT License
@@ -370,13 +327,25 @@ MIT License
 
 ## 今後の予定
 
-### Phase 6: Docusaurus統合
+### Phase 7: Notion基礎統合（次）
+- Notion API接続基盤
+- Tasks管理（CRUD操作）
+- Ideas管理（CRUD操作）
+- 「思考のバッファ」としてのNotion活用
+
+### Phase 8: Notion拡張
+- Bookmarks管理（あとで読む）
+- 検索機能強化
+- タグ・カテゴリ管理
+
+### Phase 9: Docusaurus統合
 - 記事作成ツール（create_blog_post, create_doc_article）
+- Notion→Docusaurus変換フロー
 - Frontmatter自動生成
 - 会話→記事変換機能
-- **v1.0.0目標**: Docusaurus + MCP完全統合
+- **v1.0.0目標**: 完全なナレッジ管理システム
 
-### Phase 7以降
+### Phase 10以降
 - SQLServer/SQLite統合
 - 役割別MCPサーバー分割（coding, docs, productivity）
 - VoicePeak CLI統合
