@@ -31,6 +31,10 @@ bld/
 !.vscode/extensions.json
 !.vscode/settings.json.sample
 
+# Visual Studio MCP - ユーザー固有設定を除外、サンプルは含める
+.mcp.json
+!.mcp.json.sample
+
 # Rider
 .idea/
 

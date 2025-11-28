@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "ateliers-ai-mcpserver": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "./Ateliers.Ai.McpServer/Ateliers.Ai.McpServer.csproj"
+      ]
+    }
+  }
+}
