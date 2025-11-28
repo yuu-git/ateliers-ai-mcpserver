@@ -5,6 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
+using System.Text;
+
+// UTF-8エンコーディングを明示的に設定
+Console.InputEncoding = Encoding.UTF8;
+Console.OutputEncoding = Encoding.UTF8;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -26,6 +31,14 @@ builder.Configuration
 // 設定をDIコンテナに登録
 builder.Services.Configure<AppSettings>(builder.Configuration);
 
+// AppSettings をシングルトンとして登録（GitOperationService用）
+builder.Services.AddSingleton(provider =>
+{
+    var appSettings = new AppSettings();
+    builder.Configuration.Bind(appSettings);
+    return appSettings;
+});
+
 // メモリキャッシュを追加
 builder.Services.AddMemoryCache();
 
@@ -34,6 +47,7 @@ builder.Services.AddSingleton<GitHubService>();
 builder.Services.AddSingleton<NotesService>();
 builder.Services.AddSingleton<GitHubNotesService>();
 builder.Services.AddSingleton<LocalFileService>();
+builder.Services.AddSingleton<GitOperationService>();
 
 // MCPサーバー設定
 builder.Services.AddMcpServer()

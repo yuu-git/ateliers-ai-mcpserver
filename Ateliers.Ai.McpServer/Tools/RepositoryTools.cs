@@ -8,21 +8,25 @@ namespace Ateliers.Ai.McpServer.Tools;
 
 /// <summary>
 /// 汎用リポジトリ操作ツール
+/// NOTE: AutoPull/AutoPush機能は Phase 6以降で再検討予定
 /// </summary>
 [McpServerToolType]
 public class RepositoryTools
 {
     private readonly GitHubService _gitHubService;
     private readonly LocalFileService _localFileService;
+    private readonly GitOperationService _gitOperationService;
     private readonly AppSettings _settings;
 
     public RepositoryTools(
         GitHubService gitHubService,
         LocalFileService localFileService,
+        GitOperationService gitOperationService,
         IOptions<AppSettings> settings)
     {
         _gitHubService = gitHubService;
         _localFileService = localFileService;
+        _gitOperationService = gitOperationService;
         _settings = settings.Value;
     }
 
@@ -161,6 +165,8 @@ RELATED TOOLS:
     [McpServerTool]
     [Description(@"Add a new file to a configured repository (local only).
 
+NOTE: Use GitTools for explicit Git operations (commit, push, pull).
+
 WHEN TO USE:
 - Creating new source code files
 - Creating new documentation files
@@ -170,7 +176,6 @@ WHEN TO USE:
 DO NOT USE WHEN:
 - File already exists (use edit_repository_file instead)
 - Repository LocalPath not configured
-- Need to commit directly to GitHub (requires Git integration)
 
 EXAMPLES:
 ✓ 'Create test.txt in AteliersAiMcpServer with content Hello World'
@@ -180,7 +185,8 @@ EXAMPLES:
 RELATED TOOLS:
 - edit_repository_file: Modify existing files
 - read_repository_file: Verify file contents after creation
-- list_repository_files: Check if file already exists")]
+- list_repository_files: Check if file already exists
+- commit_and_push_repository: Commit and push changes (GitTools)")]
     public async Task<string> AddRepositoryFile(
         [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
         string repositoryKey,
@@ -201,7 +207,31 @@ RELATED TOOLS:
                 return $"❌ LocalPath not configured for '{repositoryKey}'";
             }
 
+            // TODO: Phase 6 - AutoPull/AutoPush機能の再検討
+            // AutoPull
+            //if (repoSettings.AutoPull)
+            //{
+            //    var pullResult = await _gitOperationService.PullAsync(repositoryKey, repoSettings.LocalPath);
+            //    if (!pullResult.Success)
+            //        return $"❌ Pull failed: {pullResult.Message}";
+            //}
+
+            // ファイル作成
             await _localFileService.CreateFileAsync(repoSettings.LocalPath, filePath, content);
+
+            // TODO: Phase 6 - AutoPull/AutoPush機能の再検討
+            // AutoPush
+            //if (repoSettings.AutoPush)
+            //{
+            //    var pushResult = await _gitOperationService.CommitAndPushAsync(
+            //        repositoryKey, repoSettings.LocalPath, filePath);
+            //    
+            //    if (!pushResult.Success)
+            //        return $"⚠️ Created but push failed: {pushResult.Message}";
+            //    
+            //    return $"✅ Created and pushed: {filePath} ({pushResult.CommitHash?[..7]})";
+            //}
+
             return $"✅ Created: {filePath}";
         }
         catch (InvalidOperationException ex)
@@ -217,6 +247,8 @@ RELATED TOOLS:
     [McpServerTool]
     [Description(@"Edit an existing file in a configured repository (local only). Automatically creates backup.
 
+NOTE: Use GitTools for explicit Git operations (commit, push, pull).
+
 WHEN TO USE:
 - Modifying existing source code
 - Updating documentation
@@ -226,7 +258,6 @@ WHEN TO USE:
 DO NOT USE WHEN:
 - File doesn't exist yet (use add_repository_file instead)
 - Repository LocalPath not configured
-- Need to commit directly to GitHub (requires Git integration)
 
 EXAMPLES:
 ✓ 'Update README.md in AteliersAiMcpServer with new content'
@@ -236,7 +267,8 @@ EXAMPLES:
 RELATED TOOLS:
 - read_repository_file: Read current contents before editing
 - backup_repository_file: Create additional backup if needed
-- add_repository_file: Create new files")]
+- add_repository_file: Create new files
+- commit_and_push_repository: Commit and push changes (GitTools)")]
     public async Task<string> EditRepositoryFile(
         [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
         string repositoryKey,
@@ -257,7 +289,31 @@ RELATED TOOLS:
                 return $"❌ LocalPath not configured for '{repositoryKey}'";
             }
 
+            // TODO: Phase 6 - AutoPull/AutoPush機能の再検討
+            // AutoPull
+            //if (repoSettings.AutoPull)
+            //{
+            //    var pullResult = await _gitOperationService.PullAsync(repositoryKey, repoSettings.LocalPath);
+            //    if (!pullResult.Success)
+            //        return $"❌ Pull failed: {pullResult.Message}";
+            //}
+
+            // ファイル更新
             await _localFileService.UpdateFileAsync(repoSettings.LocalPath, filePath, content, createBackup: true);
+
+            // TODO: Phase 6 - AutoPull/AutoPush機能の再検討
+            // AutoPush
+            //if (repoSettings.AutoPush)
+            //{
+            //    var pushResult = await _gitOperationService.CommitAndPushAsync(
+            //        repositoryKey, repoSettings.LocalPath, filePath);
+            //    
+            //    if (!pushResult.Success)
+            //        return $"⚠️ Updated but push failed: {pushResult.Message}";
+            //    
+            //    return $"✅ Updated and pushed: {filePath} ({pushResult.CommitHash?[..7]})";
+            //}
+
             return $"✅ Updated: {filePath}";
         }
         catch (FileNotFoundException ex)
@@ -272,6 +328,8 @@ RELATED TOOLS:
 
     [McpServerTool]
     [Description(@"Delete a file from a configured repository (local only). Automatically creates backup.
+
+NOTE: Use GitTools for explicit Git operations (commit, push, pull).
 
 WHEN TO USE:
 - Removing obsolete files
@@ -292,7 +350,8 @@ EXAMPLES:
 RELATED TOOLS:
 - backup_repository_file: Create backup before deleting
 - rename_repository_file: Move to archive instead of deleting
-- list_repository_files: Verify file exists before deleting")]
+- list_repository_files: Verify file exists before deleting
+- commit_and_push_repository: Commit and push changes (GitTools)")]
     public async Task<string> DeleteRepositoryFile(
         [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
         string repositoryKey,
@@ -311,14 +370,36 @@ RELATED TOOLS:
                 return $"❌ LocalPath not configured for '{repositoryKey}'";
             }
 
+            // TODO: Phase 6 - AutoPull/AutoPush機能の再検討
+            // AutoPull
+            //if (repoSettings.AutoPush) // 削除後にプッシュするならプル必要
+            //{
+            //    var pullResult = await _gitOperationService.PullAsync(repositoryKey, repoSettings.LocalPath);
+            //    if (!pullResult.Success)
+            //        return $"❌ Pull failed: {pullResult.Message}";
+            //}
+
+            // ファイル削除
             _localFileService.DeleteFile(repoSettings.LocalPath, filePath, createBackup: true);
             
-            // .backupファイルかどうかでメッセージを変える
-            var message = filePath.EndsWith(".backup")
-                ? $"✅ Deleted: {filePath}"
-                : $"✅ Deleted: {filePath} (backup created)";
-            
-            return await Task.FromResult(message);
+            var baseMessage = filePath.EndsWith(".backup")
+                ? $"Deleted: {filePath}"
+                : $"Deleted: {filePath} (backup created)";
+
+            // TODO: Phase 6 - AutoPull/AutoPush機能の再検討
+            // AutoPush
+            //if (repoSettings.AutoPush)
+            //{
+            //    var pushResult = await _gitOperationService.CommitAndPushAsync(
+            //        repositoryKey, repoSettings.LocalPath, filePath);
+            //    
+            //    if (!pushResult.Success)
+            //        return $"⚠️ {baseMessage} but push failed: {pushResult.Message}";
+            //    
+            //    return $"✅ {baseMessage} and pushed ({pushResult.CommitHash?[..7]})";
+            //}
+
+            return $"✅ {baseMessage}";
         }
         catch (FileNotFoundException ex)
         {
@@ -332,6 +413,8 @@ RELATED TOOLS:
 
     [McpServerTool]
     [Description(@"Rename a file in a configured repository (local only).
+
+NOTE: Use GitTools for explicit Git operations (commit, push, pull).
 
 WHEN TO USE:
 - Renaming files to follow naming conventions
@@ -352,7 +435,8 @@ EXAMPLES:
 RELATED TOOLS:
 - copy_repository_file: Keep original file while creating new
 - delete_repository_file: Remove after renaming
-- list_repository_files: Verify new path doesn't exist")]
+- list_repository_files: Verify new path doesn't exist
+- commit_and_push_repository: Commit and push changes (GitTools)")]
     public async Task<string> RenameRepositoryFile(
         [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
         string repositoryKey,
@@ -373,8 +457,38 @@ RELATED TOOLS:
                 return $"❌ LocalPath not configured for '{repositoryKey}'";
             }
 
+            // TODO: Phase 6 - AutoPull/AutoPush機能の再検討
+            // AutoPull
+            //if (repoSettings.AutoPush)
+            //{
+            //    var pullResult = await _gitOperationService.PullAsync(repositoryKey, repoSettings.LocalPath);
+            //    if (!pullResult.Success)
+            //        return $"❌ Pull failed: {pullResult.Message}";
+            //}
+
+            // ファイルリネーム
             _localFileService.RenameFile(repoSettings.LocalPath, oldFilePath, newFilePath);
-            return await Task.FromResult($"✅ Renamed: {oldFilePath} → {newFilePath}");
+
+            // TODO: Phase 6 - AutoPull/AutoPush機能の再検討
+            // AutoPush
+            //if (repoSettings.AutoPush)
+            //{
+            //    // 旧ファイルと新ファイルの両方をステージング
+            //    var commitResult = await _gitOperationService.CommitAsync(
+            //        repositoryKey, repoSettings.LocalPath, ".", // すべての変更をステージング
+            //        $"Rename {oldFilePath} to {newFilePath} via MCP");
+            //    
+            //    if (!commitResult.Success)
+            //        return $"⚠️ Renamed but commit failed: {commitResult.Message}";
+            //
+            //    var pushResult = await _gitOperationService.PushAsync(repositoryKey, repoSettings.LocalPath);
+            //    if (!pushResult.Success)
+            //        return $"⚠️ Renamed and committed but push failed: {pushResult.Message}";
+            //    
+            //    return $"✅ Renamed and pushed: {oldFilePath} → {newFilePath} ({commitResult.CommitHash?[..7]})";
+            //}
+
+            return $"✅ Renamed: {oldFilePath} → {newFilePath}";
         }
         catch (FileNotFoundException ex)
         {
@@ -392,6 +506,8 @@ RELATED TOOLS:
 
     [McpServerTool]
     [Description(@"Copy a file within a configured repository (local only).
+
+NOTE: Use GitTools for explicit Git operations (commit, push, pull).
 
 WHEN TO USE:
 - Creating file templates or boilerplate
@@ -412,7 +528,8 @@ EXAMPLES:
 RELATED TOOLS:
 - rename_repository_file: Move instead of copy
 - backup_repository_file: Create timestamped backup
-- edit_repository_file: Modify after copying")]
+- edit_repository_file: Modify after copying
+- commit_and_push_repository: Commit and push changes (GitTools)")]
     public async Task<string> CopyRepositoryFile(
         [Description("Repository key: AteliersAiAssistants, AteliersAiMcpServer, AteliersDev, PublicNotes, TrainingMcpServer")]
         string repositoryKey,
@@ -435,8 +552,33 @@ RELATED TOOLS:
                 return $"❌ LocalPath not configured for '{repositoryKey}'";
             }
 
+            // TODO: Phase 6 - AutoPull/AutoPush機能の再検討
+            // AutoPull
+            //if (repoSettings.AutoPush)
+            //{
+            //    var pullResult = await _gitOperationService.PullAsync(repositoryKey, repoSettings.LocalPath);
+            //    if (!pullResult.Success)
+            //        return $"❌ Pull failed: {pullResult.Message}";
+            //}
+
+            // ファイルコピー
             _localFileService.CopyFile(repoSettings.LocalPath, sourceFilePath, destFilePath, overwrite);
-            return await Task.FromResult($"✅ Copied: {sourceFilePath} → {destFilePath}");
+
+            // TODO: Phase 6 - AutoPull/AutoPush機能の再検討
+            // AutoPush
+            //if (repoSettings.AutoPush)
+            //{
+            //    var pushResult = await _gitOperationService.CommitAndPushAsync(
+            //        repositoryKey, repoSettings.LocalPath, destFilePath,
+            //        $"Copy {sourceFilePath} to {destFilePath} via MCP");
+            //    
+            //    if (!pushResult.Success)
+            //        return $"⚠️ Copied but push failed: {pushResult.Message}";
+            //    
+            //    return $"✅ Copied and pushed: {sourceFilePath} → {destFilePath} ({pushResult.CommitHash?[..7]})";
+            //}
+
+            return $"✅ Copied: {sourceFilePath} → {destFilePath}";
         }
         catch (FileNotFoundException ex)
         {

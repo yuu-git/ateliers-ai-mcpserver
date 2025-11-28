@@ -28,11 +28,21 @@ ateliers.devの技術資産（コーディングガイドライン、技術記�
 ### 主な特徴
 
 - ✅ **ローカル優先アクセス** - LocalPath設定時は高速なローカルファイル操作、未設定時はGitHub API経由
+- ✅ **Git統合** - AutoPull/AutoPush対応、ファイル変更の自動コミット＆プッシュ
 - ✅ **汎用ファイル操作** - 読み取り/書き込み/削除/リネーム/コピー/バックアップの完全CRUD
 - ✅ **記事専門ツール** - ateliers.dev技術記事の検索・一覧・読み取り（Frontmatter自動除去）
 - ✅ **複数リポジトリ対応** - 設定ファイルで柔軟なリポジトリ管理
 
 ## バージョン履歴
+
+### v0.5.0（2024-11-28）
+- **Phase 5完了**: Git操作統合
+- LibGit2Sharp導入
+- GitOperationService実装（Pull, Commit, Push, CommitAndPush）
+- AutoPull/AutoPush機能実装
+- 認証情報階層化（リポジトリ固有 → グローバル）
+- コンフリクト検出とエラーハンドリング
+- 6つの書き込み系ツールにGit統合
 
 ### v0.4.0（2024-11-26）
 - **Phase 4完了**: ローカルファイル優先ロジック実装
@@ -61,18 +71,18 @@ ateliers.devの技術資産（コーディングガイドライン、技術記�
 
 ## 機能一覧
 
-### RepositoryTools（汎用ファイル操作）
+### RepositoryTools（汎用ファイル操作 + Git統合）
 
-| ツール | 機能 | ローカル/GitHub |
+| ツール | 機能 | Git統合 |
 |:--|:--|:--|
-| `read_repository_file` | ファイル読み取り | 両対応（ローカル優先） |
-| `list_repository_files` | ファイル一覧取得 | 両対応（ローカル優先） |
-| `add_repository_file` | ファイル新規作成 | ローカルのみ |
-| `edit_repository_file` | ファイル更新（自動バックアップ） | ローカルのみ |
-| `delete_repository_file` | ファイル削除（自動バックアップ） | ローカルのみ |
-| `rename_repository_file` | ファイルリネーム | ローカルのみ |
-| `copy_repository_file` | ファイルコピー | ローカルのみ |
-| `backup_repository_file` | バックアップ作成 | ローカルのみ |
+| `read_repository_file` | ファイル読み取り | - |
+| `list_repository_files` | ファイル一覧取得 | - |
+| `add_repository_file` | ファイル新規作成 | AutoPull/AutoPush |
+| `edit_repository_file` | ファイル更新（自動バックアップ） | AutoPull/AutoPush |
+| `delete_repository_file` | ファイル削除（自動バックアップ） | AutoPull/AutoPush |
+| `rename_repository_file` | ファイルリネーム | AutoPull/AutoPush |
+| `copy_repository_file` | ファイルコピー | AutoPull/AutoPush |
+| `backup_repository_file` | バックアップ作成 | - |
 
 ### AteliersDevTools（記事専門）
 
@@ -86,7 +96,8 @@ ateliers.devの技術資産（コーディングガイドライン、技術記�
 
 - .NET 10.0 SDK
 - Claude Desktop
-- GitHub Personal Access Token（オプション：GitHub API使用時）
+- Git（AutoPull/AutoPush使用時）
+- GitHub Personal Access Token（オプション：GitHub API/Git Push使用時）
 
 ## セットアップ
 
@@ -118,11 +129,10 @@ Copy-Item Ateliers.Ai.McpServer/appsettings.local.json.sample Ateliers.Ai.McpSer
 ```json
 {
   "Repositories": {
-    "AteliersAiMcpServer": {
-      "LocalPath": "C:\\Projects\\OnlineRepos\\yuu-git\\ateliers-ai-mcpserver"
-    },
-    "AteliersAiAssistants": {
-      "LocalPath": "C:\\Projects\\OnlineRepos\\yuu-git\\ateliers-ai-assistants"
+    "PublicNotes": {
+      "LocalPath": "C:\\Projects\\OnlineRepos\\yuu-git\\ateliers-public-notes",
+      "AutoPull": true,
+      "AutoPush": true
     }
   }
 }
@@ -132,36 +142,43 @@ Copy-Item Ateliers.Ai.McpServer/appsettings.local.json.sample Ateliers.Ai.McpSer
 - 10-5000倍高速なファイルアクセス
 - GitHub APIレート制限の回避
 - リアルタイムな編集フィードバック
+- Git統合による自動コミット＆プッシュ
 
-#### 2-3. Personal Access Token設定（GitHub API使用時）
+#### 2-3. Git設定（AutoPull/AutoPush使用時）
 
-LocalPath未設定の場合、GitHub APIを使用するためPATが必要です。
+Git統合を使用する場合、認証情報を設定：
 
-**GitHubでPAT作成:**
-
-1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
-2. **Generate new token** をクリック
-3. 設定：
-   - **Token name**: `ateliers-ai-mcpserver`
-   - **Repository access**: Public repositories (All repositories)
-   - **Permissions**:
-     - **Contents**: Read and write
-     - **Metadata**: Read-only
-4. トークンをコピー
-
-**appsettings.local.jsonに追加:**
+**グローバル設定（推奨）:**
 
 ```json
 {
   "GitHub": {
-    "AuthenticationMode": "PAT",
-    "PersonalAccessToken": "github_pat_11AAAAAA..."
-  },
-  "Repositories": {
-    // LocalPath設定...
+    "Token": "github_pat_11AAAAAA...",
+    "Email": "your-email@example.com",
+    "Username": "your-github-username"
   }
 }
 ```
+
+**リポジトリ固有設定（オプション）:**
+
+```json
+{
+  "Repositories": {
+    "PublicNotes": {
+      "GitHubToken": "github_pat_notes_specific_token",
+      "GitEmail": "notes@example.com",
+      "GitUsername": "your-username",
+      "AutoPull": true,
+      "AutoPush": true
+    }
+  }
+}
+```
+
+**認証情報の優先順位:**
+1. リポジトリ固有のToken/Email/Username
+2. グローバルのToken/Email/Username
 
 **注意**: `appsettings.local.json` は `.gitignore` で除外されており、Gitにコミットされません。
 
@@ -225,16 +242,18 @@ Services/GitHubService.cs を読んで
 
 Claude が自動的に `read_repository_file` ツールを使用します。
 
-### ファイル編集
+### ファイル編集（Git統合）
 
 ```
 README.mdのバージョン履歴を更新して
 ```
 
-Claude が以下を実行：
-1. `read_repository_file` でREADME.mdを読み取り
-2. 内容を更新
-3. `edit_repository_file` で保存（自動バックアップ作成）
+AutoPush=true の場合、Claude が以下を実行：
+1. AutoPull確認→リモートの最新を取得
+2. `read_repository_file` でREADME.mdを読み取り
+3. 内容を更新
+4. `edit_repository_file` で保存（自動バックアップ作成）
+5. Git commit & push（自動）
 
 ### 記事検索
 
@@ -244,19 +263,40 @@ GitHub Actionsに関する記事を探して
 
 Claude が `search_articles` で記事を検索し、関連記事を提示します。
 
-## ローカル優先ロジック
+## Git統合機能
 
-本MCPサーバーは、以下のロジックでファイルアクセスを最適化：
+### AutoPull/AutoPush
+
+リポジトリごとに設定可能：
+
+```json
+{
+  "Repositories": {
+    "PublicNotes": {
+      "AutoPull": true,   // 書き込み前に自動プル
+      "AutoPush": true    // 書き込み後に自動プッシュ
+    }
+  }
+}
+```
+
+### コンフリクト処理
+
+マージコンフリクト検出時はエラーで停止し、手動解決を促します：
 
 ```
-1. LocalPath設定あり？
-   ↓ YES
-   ローカルファイルシステムから読み取り（高速）
-   ↓ NO
-   GitHub APIから読み取り（キャッシュ付き）
+❌ Pull failed: Merge conflict detected. Please resolve manually:
+1. Navigate to repository
+2. Run: git status
+3. Resolve conflicts
+4. Run: git add . && git commit
 ```
 
-**書き込み操作**はローカルのみ対応（Phase 5でGit統合予定）。
+### コミットメッセージ
+
+デフォルト: `Update {filePath} via MCP`
+
+将来的にカスタマイズ可能な実装予定。
 
 ## トラブルシューティング
 
@@ -271,6 +311,13 @@ Claude が `search_articles` で記事を検索し、関連記事を提示しま
 1. `appsettings.local.json` のLocalPathが正しいか確認
 2. GitHub API使用時はPATが設定されているか確認
 3. ファイルパスが正しいか確認（相対パスで指定）
+
+### Git Push が失敗する
+
+1. GitHub Token が正しく設定されているか確認
+2. Tokenに Contents: Write 権限があるか確認
+3. リポジトリがGitで初期化されているか確認
+4. リモートブランチが設定されているか確認（`git remote -v`）
 
 ### ツールが見つからない
 
@@ -288,9 +335,10 @@ Ateliers.Ai.McpServer/
 │  └─ AppSettings.cs          # 設定クラス
 ├─ Services/
 │  ├─ GitHubService.cs        # GitHub API操作
-│  └─ LocalFileService.cs     # ローカルファイル操作
+│  ├─ LocalFileService.cs     # ローカルファイル操作
+│  └─ GitOperationService.cs  # Git操作（Pull/Commit/Push）
 ├─ Tools/
-│  ├─ RepositoryTools.cs      # 汎用ファイル操作ツール
+│  ├─ RepositoryTools.cs      # 汎用ファイル操作ツール（Git統合）
 │  └─ AteliersDevTools.cs     # 記事専門ツール
 ├─ Program.cs                 # エントリーポイント
 ├─ appsettings.json           # 基本設定
@@ -322,12 +370,14 @@ MIT License
 
 ## 今後の予定
 
-### Phase 5: Git操作統合
-- LibGit2Sharp導入
-- AutoPull/AutoPush実装
-- コミット＆プッシュ機能
+### Phase 6: Docusaurus統合
+- 記事作成ツール（create_blog_post, create_doc_article）
+- Frontmatter自動生成
+- 会話→記事変換機能
+- **v1.0.0目標**: Docusaurus + MCP完全統合
 
-### Phase 6以降
+### Phase 7以降
 - SQLServer/SQLite統合
 - 役割別MCPサーバー分割（coding, docs, productivity）
 - VoicePeak CLI統合
+- Docker化（配布オプション）

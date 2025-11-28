@@ -1,7 +1,10 @@
-﻿{
+{
   "GitHub": {
     "AuthenticationMode": "PersonalAccessToken",
     "PersonalAccessToken": "github_pat_ここにあなたのPATを貼り付けてください",
+    "Token": "github_pat_ここにあなたのPATを貼り付けてください",
+    "Email": "your-email@example.com",
+    "Username": "your-github-username",
     "CacheExpirationMinutes": 5
   },
   "Repositories": {
@@ -15,7 +18,12 @@
       "LocalPath": "{gitリポジトリのパス}\\ateliers-dev"
     },
     "PublicNotes": {
-      "LocalPath": "{gitリポジトリのパス}\\ateliers-public-notes"
+      "LocalPath": "{gitリポジトリのパス}\\ateliers-public-notes",
+      "GitHubToken": "github_pat_リポジトリ固有のPAT（オプション）",
+      "GitEmail": "your-email@example.com",
+      "GitUsername": "your-github-username",
+      "AutoPull": true,
+      "AutoPush": true
     },
     "TrainingMcpServer": {
       "LocalPath": "{gitリポジトリのパス}\\ateliers-training-mcpserver-claude"

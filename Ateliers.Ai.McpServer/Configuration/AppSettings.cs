@@ -20,8 +20,17 @@ public class GitHubSettings
     /// <summary>認証モード（Anonymous or PAT）</summary>
     public string AuthenticationMode { get; set; } = "Anonymous";
 
-    /// <summary>Personal Access Token</summary>
+    /// <summary>Personal Access Token（グローバル設定）</summary>
     public string? PersonalAccessToken { get; set; }
+
+    /// <summary>Personal Access Token（グローバル設定・短縮名）</summary>
+    public string? Token { get; set; }
+
+    /// <summary>Git Email（グローバル設定）</summary>
+    public string? Email { get; set; }
+
+    /// <summary>Git Username（グローバル設定）</summary>
+    public string? Username { get; set; }
 
     /// <summary>キャッシュ有効期限（分）</summary>
     public int CacheExpirationMinutes { get; set; } = 5;
@@ -40,6 +49,15 @@ public class RepositoryConfig
 
     /// <summary>ローカルパス（設定時はローカル優先）</summary>
     public string? LocalPath { get; set; }
+
+    /// <summary>リポジトリ固有のGitHub Token（グローバル設定よりも優先）</summary>
+    public string? GitHubToken { get; set; }
+
+    /// <summary>リポジトリ固有のGit Email（グローバル設定よりも優先）</summary>
+    public string? GitEmail { get; set; }
+
+    /// <summary>リポジトリ固有のGit Username（グローバル設定よりも優先）</summary>
+    public string? GitUsername { get; set; }
 
     /// <summary>書き込み前に自動プル</summary>
     public bool AutoPull { get; set; } = false;
