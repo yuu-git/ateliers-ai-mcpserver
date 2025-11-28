@@ -86,11 +86,11 @@ VS Copilot      ┘
 #### 1.3 動作テスト
 
 **テスト項目:**
-- [ ] Agent Mode起動確認
-- [ ] ツール一覧表示確認
-- [ ] GitTools動作確認（commit_and_push_repository）
-- [ ] RepositoryTools動作確認（read_repository_file）
-- [ ] AteliersDevTools動作確認（read_article）
+- [x] Agent Mode起動確認
+- [x] ツール一覧表示確認
+- [x] GitTools動作確認（commit_and_push_repository）
+- [x] RepositoryTools動作確認（read_repository_file）
+- [x] AteliersDevTools動作確認（read_article）
 - [ ] GitHubTools動作確認（list_repositories）
 
 ---
@@ -206,7 +206,10 @@ Docs/
 ├── troubleshooting.md              # 新規追加
 ├── phases/
 │   ├── phase5-handover.md
-│   └── phase6-plan.md              # このファイル
+│   ├── phase6-plan.md              # このファイル
+│   ├── phase7-plan.md              # 新規: Notion基礎統合
+│   ├── phase8-plan.md              # 新規: Notion拡張
+│   └── phase9-plan.md              # 新規: Docusaurus統合
 ├── decisions/
 │   └── 2025-11-28-git-tools-design.md
 └── deferred-features.md
@@ -316,56 +319,58 @@ Phase 6完了後、以下が可能に：
 
 ## Phase 7 への準備
 
-Phase 6完了後、Phase 7（Docusaurus統合）で以下が可能に：
+Phase 6完了後、Phase 7（Notion基礎統合）で以下が可能に：
 
-1. **どのIDEからでも記事作成**
+1. **どのIDEからでもタスク・アイデア管理**
    ```
-   VS Code → ateliers-ai-mcpserver → Docusaurus記事作成
-   Visual Studio → ateliers-ai-mcpserver → Docusaurus記事作成
-   Claude Desktop → ateliers-ai-mcpserver → Docusaurus記事作成
-   ```
-
-2. **統一されたワークフロー**
-   ```
-   1. コード実装（任意のIDE）
-   2. Git操作（MCP経由）
-   3. 記事作成（MCP経由）
-   4. 公開（MCP経由）
+   VS Code → ateliers-ai-mcpserver → Notion Tasks追加
+   Visual Studio → ateliers-ai-mcpserver → Notion Ideas追加
+   Claude Desktop → ateliers-ai-mcpserver → Notion参照・更新
    ```
 
-3. **ナレッジベース自動化**
-   - 会話内容から記事生成
-   - どのIDEからでも実行可能
-   - 統一されたフロントマター
+2. **思考のバッファとしてのNotion**
+   ```
+   1. アイデア発生（任意のIDE）
+   2. Notionに即座にメモ（MCP経由）
+   3. Gitコミット不要な軽量管理
+   4. 後で整理・記事化
+   ```
+
+3. **Phase 8以降への基盤**
+   - Notion拡張機能（Bookmarks、検索強化）
+   - Docusaurus統合（Notion→記事変換フロー）
+   - v1.0.0 リリース準備
 
 ---
 
 ## 完了基準
 
 ### 必須条件
-- ✅ VS Code統合完了
-- ✅ Visual Studio統合完了
-- ✅ Claude Desktop動作確認
-- ✅ 全ツール動作確認（3つのIDE）
-- ✅ セットアップガイド完備（3つのIDE）
-- ✅ トラブルシューティングガイド完備
-- ✅ README更新
+- [x] VS Code統合完了（設定ファイル・ドキュメント）
+- [ ] Visual Studio統合完了
+- [ ] Claude Desktop動作確認
+- [ ] 全ツール動作確認（3つのIDE）
+- [x] セットアップガイド（VS Code）
+- [ ] セットアップガイド（Visual Studio, Claude Desktop）
+- [ ] トラブルシューティングガイド
+- [ ] README更新
 
 ### テスト項目
-- ✅ GitTools（7ツール）× 3 IDE = 21テスト
-- ✅ RepositoryTools（6ツール）× 3 IDE = 18テスト
-- ✅ AteliersDevTools（3ツール）× 3 IDE = 9テスト
-- ✅ GitHubTools（3ツール）× 3 IDE = 9テスト
-- 合計: 57テスト
+- [x] GitTools（7ツール）× VS Code = 7テスト
+- [x] RepositoryTools（6ツール）× VS Code = 6テスト
+- [x] AteliersDevTools（3ツール）× VS Code = 3テスト
+- [ ] GitHubTools（3ツール）× VS Code = 3テスト
+- [ ] 全ツール × Visual Studio
+- [ ] 全ツール × Claude Desktop
 
 ### ドキュメント
-- ✅ `Docs/setup/claude-desktop.md`
-- ✅ `Docs/setup/vscode.md`
-- ✅ `Docs/setup/visual-studio.md`
-- ✅ `Docs/troubleshooting.md`
-- ✅ `README.md` 更新
-- ✅ `.vscode/mcp.json.sample`
-- ✅ `.mcp.json.sample`
+- [ ] `Docs/setup/claude-desktop.md`
+- [x] `Docs/setup/vscode.md`
+- [ ] `Docs/setup/visual-studio.md`
+- [ ] `Docs/troubleshooting.md`
+- [ ] `README.md` 更新
+- [x] `.vscode/mcp.json.sample`
+- [ ] `.mcp.json.sample`
 
 ---
 
@@ -401,21 +406,33 @@ See Docs/setup/ for client-specific setup instructions
 
 ## 次のステップ（Phase 7予告）
 
-Phase 6完了後、Phase 7で実装予定：
+Phase 6完了後、Phase 7（Notion基礎統合）で実装予定：
 
-1. **Docusaurus統合**
-   - 記事作成・更新ツール
-   - フロントマター自動生成
-   - カテゴリ管理
+### 1. Notion API接続基盤
+- 認証システム構築（Personal Access Token / OAuth対応）
+- appsettings.json設定
+- Notion API C# クライアント実装
 
-2. **ナレッジベース自動化**
-   - 会話→記事変換
-   - マルチクライアント対応活用
+### 2. Tasks管理（CRUD操作）
+- `add_task` - タスク追加
+- `update_task` - タスク更新
+- `list_tasks` - タスク一覧取得（フィルタ対応）
+- `complete_task` - タスク完了
 
-3. **v1.0.0 リリース準備**
-   - 全機能統合完了
-   - ドキュメント完備
-   - 本番運用準備
+### 3. Ideas管理（CRUD操作）
+- `add_idea` - アイデア追加
+- `search_ideas` - アイデア検索
+- `update_idea` - アイデア更新
+
+### 4. マルチクライアント対応
+- VS Code, Visual Studio, Claude Desktop から同じNotionツール利用
+- コミット不要な軽量情報管理
+- 「思考のバッファ」として機能
+
+**Phase 8以降への展望:**
+- Phase 8: Notion拡張（Bookmarks、検索強化、タグ管理）
+- Phase 9: Docusaurus統合（Notion→記事変換フロー）
+- v1.0.0: 完全な個人ナレッジ管理システム
 
 ---
 
