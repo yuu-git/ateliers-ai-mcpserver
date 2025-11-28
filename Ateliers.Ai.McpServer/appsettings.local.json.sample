@@ -3,8 +3,8 @@
     "AuthenticationMode": "PersonalAccessToken",
     "PersonalAccessToken": "github_pat_ここにあなたのPATを貼り付けてください",
     "Token": "github_pat_ここにあなたのPATを貼り付けてください",
-    "Email": "your-email@example.com",
-    "Username": "your-github-username",
+    "Email": "your-email@example.com",  // REQUIRED for Git commits
+    "Username": "your-github-username",  // REQUIRED for Git commits
     "CacheExpirationMinutes": 5
   },
   "Repositories": {
@@ -20,10 +20,10 @@
     "PublicNotes": {
       "LocalPath": "{gitリポジトリのパス}\\ateliers-public-notes",
       "GitHubToken": "github_pat_リポジトリ固有のPAT（オプション）",
-      "GitEmail": "your-email@example.com",
-      "GitUsername": "your-github-username",
-      "AutoPull": true,
-      "AutoPush": true
+      "GitEmail": "your-email@example.com",  // Repository-specific override (optional)
+      "GitUsername": "your-github-username",  // Repository-specific override (optional)
+      "AutoPull": false,  // EXPERIMENTAL: Deferred to Phase 6+
+      "AutoPush": false   // EXPERIMENTAL: Deferred to Phase 6+
     },
     "TrainingMcpServer": {
       "LocalPath": "{gitリポジトリのパス}\\ateliers-training-mcpserver-claude"

@@ -41,20 +41,15 @@ public class GitOperationService
     }
 
     /// <summary>
-    /// Git Identity（Email, Username）を解決
+    /// Git Identity（Email, Username）を解決（リポジトリ固有 → グローバル → null）
     /// </summary>
-    private (string email, string username) ResolveGitIdentity(string repositoryKey)
+    private (string? email, string? username) ResolveGitIdentity(string repositoryKey)
     {
         if (!_settings.Repositories.TryGetValue(repositoryKey, out var config))
-            return ("unknown@example.com", "unknown");
+            return (null, null);
 
-        var email = config.GitEmail
-            ?? _settings.GitHub.Email
-            ?? "unknown@example.com";
-
-        var username = config.GitUsername
-            ?? _settings.GitHub.Username
-            ?? "unknown";
+        var email = config.GitEmail ?? _settings.GitHub.Email;
+        var username = config.GitUsername ?? _settings.GitHub.Username;
 
         return (email, username);
     }
@@ -85,6 +80,14 @@ public class GitOperationService
 
                 // Git Identityチェック
                 var (email, username) = ResolveGitIdentity(repositoryKey);
+                if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(username))
+                {
+                    return new PullResult
+                    {
+                        Success = false,
+                        Message = "Git email or username not configured. Please set GitHub.Email and GitHub.Username in appsettings.local.json"
+                    };
+                }
 
                 // リポジトリチェック
                 if (!Repository.IsValid(repoPath))
@@ -162,6 +165,14 @@ public class GitOperationService
             {
                 // Git Identityチェック
                 var (email, username) = ResolveGitIdentity(repositoryKey);
+                if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(username))
+                {
+                    return new CommitResult
+                    {
+                        Success = false,
+                        Message = "Git email or username not configured. Please set GitHub.Email and GitHub.Username in appsettings.local.json"
+                    };
+                }
 
                 // リポジトリチェック
                 if (!Repository.IsValid(repoPath))
@@ -217,6 +228,14 @@ public class GitOperationService
             {
                 // Git Identityチェック
                 var (email, username) = ResolveGitIdentity(repositoryKey);
+                if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(username))
+                {
+                    return new CommitResult
+                    {
+                        Success = false,
+                        Message = "Git email or username not configured. Please set GitHub.Email and GitHub.Username in appsettings.local.json"
+                    };
+                }
 
                 // リポジトリチェック
                 if (!Repository.IsValid(repoPath))
@@ -359,41 +378,64 @@ public class GitOperationService
         {
             try
             {
-                // Git Identityチェック
-                var (email, username) = ResolveGitIdentity(repositoryKey);
-
-                // リポジトリチェック
-                if (!Repository.IsValid(repoPath))
+                // Git Identityチェック（注釈付きタグの場合のみ必要）
+                if (!string.IsNullOrEmpty(message))
                 {
+                    var (email, username) = ResolveGitIdentity(repositoryKey);
+                    if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(username))
+                    {
+                        return new TagResult
+                        {
+                            Success = false,
+                            Message = "Git email or username not configured. Please set GitHub.Email and GitHub.Username in appsettings.local.json (required for annotated tags)"
+                        };
+                    }
+
+                    // リポジトリチェック
+                    if (!Repository.IsValid(repoPath))
+                    {
+                        return new TagResult
+                        {
+                            Success = false,
+                            Message = $"Not a valid git repository: {repoPath}"
+                        };
+                    }
+
+                    using var repo = new Repository(repoPath);
+
+                    // 注釈付きタグ
+                    var signature = new Signature(username, email, DateTimeOffset.Now);
+                    var tag = repo.Tags.Add(tagName, repo.Head.Tip, signature, message);
+
                     return new TagResult
                     {
-                        Success = false,
-                        Message = $"Not a valid git repository: {repoPath}"
+                        Success = true,
+                        Message = $"Tag created: {tagName}",
+                        TagName = tagName
                     };
-                }
-
-                using var repo = new Repository(repoPath);
-
-                // タグ作成
-                Tag tag;
-                if (string.IsNullOrEmpty(message))
-                {
-                    // 軽量タグ
-                    tag = repo.Tags.Add(tagName, repo.Head.Tip);
                 }
                 else
                 {
-                    // 注釈付きタグ
-                    var signature = new Signature(username, email, DateTimeOffset.Now);
-                    tag = repo.Tags.Add(tagName, repo.Head.Tip, signature, message);
-                }
+                    // 軽量タグ（Email/Username不要）
+                    if (!Repository.IsValid(repoPath))
+                    {
+                        return new TagResult
+                        {
+                            Success = false,
+                            Message = $"Not a valid git repository: {repoPath}"
+                        };
+                    }
 
-                return new TagResult
-                {
-                    Success = true,
-                    Message = $"Tag created: {tagName}",
-                    TagName = tagName
-                };
+                    using var repo = new Repository(repoPath);
+                    var tag = repo.Tags.Add(tagName, repo.Head.Tip);
+
+                    return new TagResult
+                    {
+                        Success = true,
+                        Message = $"Tag created: {tagName}",
+                        TagName = tagName
+                    };
+                }
             }
             catch (Exception ex)
             {
