@@ -1,0 +1,11 @@
+{
+  "Notion": {
+    "ApiToken": "[YOUR_NOTION_API_TOKEN]",
+    "ApiVersion": "2022-06-28",
+    "WorkspaceId": "[YOUR_WORKSPACE_ID]",
+    "Databases": {
+      "Tasks": "[YOUR_TASKS_DATABASE_ID]",
+      "Ideas": "[YOUR_IDEAS_DATABASE_ID]"
+    }
+  }
+}

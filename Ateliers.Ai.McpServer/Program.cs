@@ -26,7 +26,9 @@ builder.Configuration.Sources.Clear();
 builder.Configuration
     .SetBasePath(assemblyDirectory)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
-    .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
+    .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true)
+    .AddJsonFile("notionsettings.json", optional: true, reloadOnChange: false)
+    .AddJsonFile("notionsettings.local.json", optional: true, reloadOnChange: true);
 
 // 設定をDIコンテナに登録
 builder.Services.Configure<AppSettings>(builder.Configuration);
@@ -48,6 +50,7 @@ builder.Services.AddSingleton<NotesService>();
 builder.Services.AddSingleton<GitHubNotesService>();
 builder.Services.AddSingleton<LocalFileService>();
 builder.Services.AddSingleton<GitOperationService>();
+builder.Services.AddSingleton<NotionService>();
 
 // MCPサーバー設定
 builder.Services.AddMcpServer()
