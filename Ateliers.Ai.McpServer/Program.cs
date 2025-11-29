@@ -51,6 +51,8 @@ builder.Services.AddSingleton<GitHubNotesService>();
 builder.Services.AddSingleton<LocalFileService>();
 builder.Services.AddSingleton<GitOperationService>();
 builder.Services.AddSingleton<NotionService>();
+builder.Services.AddSingleton<NotionTasksService>();
+builder.Services.AddSingleton<NotionIdeasService>();
 
 // MCPサーバー設定
 builder.Services.AddMcpServer()
