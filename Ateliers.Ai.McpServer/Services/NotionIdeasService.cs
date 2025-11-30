@@ -28,10 +28,9 @@ public class NotionIdeasService
     public async Task<string> AddIdeaAsync(
         string title,
         string? content = null,
-        string[]? categories = null,
         string[]? tags = null,
-        string? relatedLinks = null,
-        string? createdBy = null)
+        string? link = null,
+        string? registrant = null)
     {
         var databaseId = GetIdeasDatabaseId();
 
@@ -46,15 +45,6 @@ public class NotionIdeasService
             }
         };
 
-        // Category (Multi-select)
-        if (categories != null && categories.Length > 0)
-        {
-            properties["Category"] = new MultiSelectPropertyValue
-            {
-                MultiSelect = categories.Select(cat => new SelectOption { Name = cat }).ToList()
-            };
-        }
-
         // Tags
         if (tags != null && tags.Length > 0)
         {
@@ -67,16 +57,16 @@ public class NotionIdeasService
         // Status (デフォルト: アイデア)
         properties["Status"] = new SelectPropertyValue { Select = new SelectOption { Name = "アイデア" } };
 
-        // Related Links
-        if (!string.IsNullOrWhiteSpace(relatedLinks))
+        // Link
+        if (!string.IsNullOrWhiteSpace(link))
         {
-            properties["Related Links"] = new UrlPropertyValue { Url = relatedLinks };
+            properties["Link"] = new UrlPropertyValue { Url = link };
         }
 
-        // Created By
-        if (!string.IsNullOrWhiteSpace(createdBy))
+        // Registrant
+        if (!string.IsNullOrWhiteSpace(registrant))
         {
-            properties["Created By"] = new SelectPropertyValue { Select = new SelectOption { Name = createdBy } };
+            properties["Registrant"] = new SelectPropertyValue { Select = new SelectOption { Name = registrant } };
         }
 
         var request = new PagesCreateParameters
@@ -112,7 +102,6 @@ public class NotionIdeasService
     /// </summary>
     public async Task<string> SearchIdeasAsync(
         string? keyword = null,
-        string[]? categories = null,
         string[]? tags = null,
         int limit = 10)
     {
@@ -123,15 +112,6 @@ public class NotionIdeasService
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             filters.Add(new TitleFilter("Name", contains: keyword));
-        }
-
-        // カテゴリフィルタ
-        if (categories != null && categories.Length > 0)
-        {
-            foreach (var category in categories)
-            {
-                filters.Add(new MultiSelectFilter("Category", contains: category));
-            }
         }
 
         // タグフィルタ
@@ -169,11 +149,11 @@ public class NotionIdeasService
                 ? string.Join("", titleProp.Title.Select(t => t.PlainText))
                 : "Untitled";
 
-            var categoryList = page != null && props.ContainsKey("Category") && props["Category"] is MultiSelectPropertyValue catProp
-                ? string.Join(", ", catProp.MultiSelect.Select(c => c.Name))
+            var tagList = page != null && props.ContainsKey("Tags") && props["Tags"] is MultiSelectPropertyValue tagProp
+                ? string.Join(", ", tagProp.MultiSelect.Select(t => t.Name))
                 : "未設定";
 
-            return $"- {ideaTitle} (カテゴリ: {categoryList}, ID: {page.Id})";
+            return $"- {ideaTitle} (タグ: {tagList}, ID: {page.Id})";
         });
 
         return $"Ideas ({response.Results.Count}):\n" + string.Join("\n", ideas);
@@ -186,10 +166,9 @@ public class NotionIdeasService
         string ideaId,
         string? title = null,
         string? content = null,
-        string[]? categories = null,
         string[]? tags = null,
         string? status = null,
-        string? relatedLinks = null)
+        string? link = null)
     {
         var properties = new Dictionary<string, PropertyValue>();
 
@@ -201,14 +180,6 @@ public class NotionIdeasService
                 {
                     new RichTextText { Text = new Text { Content = title } }
                 }
-            };
-        }
-
-        if (categories != null && categories.Length > 0)
-        {
-            properties["Category"] = new MultiSelectPropertyValue
-            {
-                MultiSelect = categories.Select(cat => new SelectOption { Name = cat }).ToList()
             };
         }
 
@@ -225,9 +196,9 @@ public class NotionIdeasService
             properties["Status"] = new SelectPropertyValue { Select = new SelectOption { Name = status } };
         }
 
-        if (!string.IsNullOrWhiteSpace(relatedLinks))
+        if (!string.IsNullOrWhiteSpace(link))
         {
-            properties["Related Links"] = new UrlPropertyValue { Url = relatedLinks };
+            properties["Link"] = new UrlPropertyValue { Url = link };
         }
 
         var request = new PagesUpdateParameters { Properties = properties };

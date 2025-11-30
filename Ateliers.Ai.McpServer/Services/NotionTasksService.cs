@@ -32,7 +32,7 @@ public class NotionTasksService
         string? priority = "中",
         DateTime? dueDate = null,
         string[]? tags = null,
-        string? createdBy = null)
+        string? registrant = null)
     {
         var databaseId = GetTasksDatabaseId();
 
@@ -59,10 +59,10 @@ public class NotionTasksService
             properties["Priority"] = new SelectPropertyValue { Select = new SelectOption { Name = priority } };
         }
 
-        // Due Date
+        // Deadline
         if (dueDate.HasValue)
         {
-            properties["Due Date"] = new DatePropertyValue
+            properties["Deadline"] = new DatePropertyValue
             {
                 Date = new Date { Start = dueDate.Value }
             };
@@ -77,10 +77,10 @@ public class NotionTasksService
             };
         }
 
-        // Created By
-        if (!string.IsNullOrWhiteSpace(createdBy))
+        // Registrant
+        if (!string.IsNullOrWhiteSpace(registrant))
         {
-            properties["Created By"] = new SelectPropertyValue { Select = new SelectOption { Name = createdBy } };
+            properties["Registrant"] = new SelectPropertyValue { Select = new SelectOption { Name = registrant } };
         }
 
         var request = new PagesCreateParameters
@@ -148,7 +148,7 @@ public class NotionTasksService
 
         if (dueDate.HasValue)
         {
-            properties["Due Date"] = new DatePropertyValue
+            properties["Deadline"] = new DatePropertyValue
             {
                 Date = new Date { Start = dueDate.Value }
             };
@@ -215,7 +215,7 @@ public class NotionTasksService
         if (dueSoon == true)
         {
             var nextWeek = DateTime.Now.AddDays(7);
-            filters.Add(new DateFilter("Due Date", onOrBefore: nextWeek));
+            filters.Add(new DateFilter("Deadline", onOrBefore: nextWeek));
         }
 
         var queryParams = new DatabasesQueryParameters

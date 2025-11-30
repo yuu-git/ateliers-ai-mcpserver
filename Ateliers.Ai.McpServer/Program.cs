@@ -53,6 +53,7 @@ builder.Services.AddSingleton<GitOperationService>();
 builder.Services.AddSingleton<NotionService>();
 builder.Services.AddSingleton<NotionTasksService>();
 builder.Services.AddSingleton<NotionIdeasService>();
+builder.Services.AddSingleton<NotionReadingListService>();
 
 // MCPサーバー設定
 builder.Services.AddMcpServer()
