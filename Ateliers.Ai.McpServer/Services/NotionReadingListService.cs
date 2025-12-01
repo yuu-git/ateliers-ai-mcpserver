@@ -31,7 +31,7 @@ public class NotionReadingListService
         string? type = null,
         string? status = "未読",
         string? priority = "中",
-        DateTime? deadline = null,
+        DateTime? date = null,
         bool reference = false,
         string[]? tags = null,
         string? registrant = null,
@@ -76,12 +76,12 @@ public class NotionReadingListService
             properties["Priority"] = new SelectPropertyValue { Select = new SelectOption { Name = priority } };
         }
 
-        // Deadline
-        if (deadline.HasValue)
+        // Date
+        if (date.HasValue)
         {
-            properties["Deadline"] = new DatePropertyValue
+            properties["Date"] = new DatePropertyValue
             {
-                Date = new Date { Start = deadline.Value }
+                Date = new Date { Start = date.Value }
             };
         }
 

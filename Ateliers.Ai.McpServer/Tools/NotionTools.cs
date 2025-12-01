@@ -52,13 +52,14 @@ RELATED TOOLS:
         [Description("タスクの詳細説明（オプション）")] string? description = null,
         [Description("ステータス: 未着手/進行中/完了/保留（デフォルト: 未着手）")] string? status = "未着手",
         [Description("優先度: 高/中/低（デフォルト: 中）")] string? priority = "中",
-        [Description("期限日（オプション、ISO 8601形式）")] DateTime? dueDate = null,
+        [Description("日付: 期限日 or 実行予定日時（オプション）")] DateTime? dueDate = null,
+        [Description("場所: 自宅/オフィス/Zoom/Google Meet/Teams/客先/外出先/その他（オプション）")] string? location = null,
         [Description("タグ配列（オプション）")] string[]? tags = null,
         [Description("登録元: Claude/GPT/Copilot/手動（オプション）")] string? registrant = null)
     {
         try
         {
-            return await _notionTasksService.AddTaskAsync(title, description, status, priority, dueDate, tags, registrant);
+            return await _notionTasksService.AddTaskAsync(title, description, status, priority, dueDate, location, tags, registrant);
         }
         catch (Exception ex)
         {
@@ -92,12 +93,13 @@ RELATED TOOLS:
         [Description("新しい詳細説明（オプション）")] string? description = null,
         [Description("新しいステータス（オプション）")] string? status = null,
         [Description("新しい優先度（オプション）")] string? priority = null,
-        [Description("新しい期限日（オプション）")] DateTime? dueDate = null,
+        [Description("新しい日付（オプション）")] DateTime? dueDate = null,
+        [Description("新しい場所（オプション）")] string? location = null,
         [Description("新しいタグ配列（オプション）")] string[]? tags = null)
     {
         try
         {
-            return await _notionTasksService.UpdateTaskAsync(taskId, title, description, status, priority, dueDate, tags);
+            return await _notionTasksService.UpdateTaskAsync(taskId, title, description, status, priority, dueDate, location, tags);
         }
         catch (Exception ex)
         {
@@ -283,6 +285,7 @@ WHEN TO USE:
 - 技術記事、書籍、動画などを「あとで読む/見る」リストに追加したい時
 - URLを保存して後で参照したい時
 - 学習資料を管理したい時
+- ウェビナーや配信セミナーを登録したい時
 
 DO NOT USE WHEN:
 - 今すぐ読む/実行するタスクの時（use add_task）
@@ -291,6 +294,7 @@ DO NOT USE WHEN:
 EXAMPLES:
 ✓ 'このMCP記事、いつか読みたいからリーディングリストに追加'
 ✓ 'この技術書、優先度高で追加して'
+✓ '12/10 14:00のウェビナーをリーディングリストに追加'
 ✗ '今日この記事読む'（use add_task）
 
 RELATED TOOLS:
@@ -302,7 +306,7 @@ RELATED TOOLS:
         [Description("種類: 記事/書籍/動画/論文/コード例/その他（オプション）")] string? type = null,
         [Description("ステータス: 未読/完了（デフォルト: 未読）")] string? status = "未読",
         [Description("優先度: 高/中/低（デフォルト: 中）")] string? priority = "中",
-        [Description("期限日（オプション）")] DateTime? deadline = null,
+        [Description("日付: 期限日 or 開催日時 or 配信日時（オプション）")] DateTime? date = null,
         [Description("再参照フラグ（デフォルト: false）")] bool reference = false,
         [Description("タグ配列（オプション）")] string[]? tags = null,
         [Description("登録元: Claude/GPT/Copilot/手動（オプション）")] string? registrant = null,
@@ -313,7 +317,7 @@ RELATED TOOLS:
         try
         {
             return await _notionReadingListService.AddToReadingListAsync(
-                title, link, type, status, priority, deadline, 
+                title, link, type, status, priority, date, 
                 reference, tags, registrant, notes, description, author);
         }
         catch (Exception ex)

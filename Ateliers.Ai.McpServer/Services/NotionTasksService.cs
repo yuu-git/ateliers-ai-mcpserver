@@ -31,6 +31,7 @@ public class NotionTasksService
         string? status = "未着手",
         string? priority = "中",
         DateTime? dueDate = null,
+        string? location = null,
         string[]? tags = null,
         string? registrant = null)
     {
@@ -59,12 +60,24 @@ public class NotionTasksService
             properties["Priority"] = new SelectPropertyValue { Select = new SelectOption { Name = priority } };
         }
 
-        // Deadline
+        // Date
         if (dueDate.HasValue)
         {
-            properties["Deadline"] = new DatePropertyValue
+            properties["Date"] = new DatePropertyValue
             {
                 Date = new Date { Start = dueDate.Value }
+            };
+        }
+
+        // Location (Text)
+        if (!string.IsNullOrWhiteSpace(location))
+        {
+            properties["Location"] = new RichTextPropertyValue
+            {
+                RichText = new List<RichTextBase>
+                {
+                    new RichTextText { Text = new Text { Content = location } }
+                }
             };
         }
 
@@ -121,6 +134,7 @@ public class NotionTasksService
         string? status = null,
         string? priority = null,
         DateTime? dueDate = null,
+        string? location = null,
         string[]? tags = null)
     {
         var properties = new Dictionary<string, PropertyValue>();
@@ -148,9 +162,20 @@ public class NotionTasksService
 
         if (dueDate.HasValue)
         {
-            properties["Deadline"] = new DatePropertyValue
+            properties["Date"] = new DatePropertyValue
             {
                 Date = new Date { Start = dueDate.Value }
+            };
+        }
+
+        if (!string.IsNullOrWhiteSpace(location))
+        {
+            properties["Location"] = new RichTextPropertyValue
+            {
+                RichText = new List<RichTextBase>
+                {
+                    new RichTextText { Text = new Text { Content = location } }
+                }
             };
         }
 
@@ -215,7 +240,7 @@ public class NotionTasksService
         if (dueSoon == true)
         {
             var nextWeek = DateTime.Now.AddDays(7);
-            filters.Add(new DateFilter("Deadline", onOrBefore: nextWeek));
+            filters.Add(new DateFilter("Date", onOrBefore: nextWeek));
         }
 
         var queryParams = new DatabasesQueryParameters
