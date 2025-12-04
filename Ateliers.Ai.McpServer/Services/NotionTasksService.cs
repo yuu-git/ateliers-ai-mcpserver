@@ -273,7 +273,7 @@ public class NotionTasksService
                 ? selectProp.Select?.Name ?? "未設定"
                 : "未設定";
 
-            var priorityValue = props.ContainsKey("Priority") && props["Priority"] is SelectPropertyValue priorityProp
+            var priorityValue = props != null && props.ContainsKey("Priority") && props["Priority"] is SelectPropertyValue priorityProp
                 ? priorityProp.Select?.Name ?? "未設定"
                 : "未設定";
 

@@ -145,11 +145,11 @@ public class NotionIdeasService
         var ideas = response.Results.Select(page =>
         {
             var props = (page as Page)?.Properties;
-            var ideaTitle = page != null && props.ContainsKey("Name") && props["Name"] is TitlePropertyValue titleProp
+            var ideaTitle = props != null && props.ContainsKey("Name") && props["Name"] is TitlePropertyValue titleProp
                 ? string.Join("", titleProp.Title.Select(t => t.PlainText))
                 : "Untitled";
 
-            var tagList = page != null && props.ContainsKey("Tags") && props["Tags"] is MultiSelectPropertyValue tagProp
+            var tagList = props != null && props.ContainsKey("Tags") && props["Tags"] is MultiSelectPropertyValue tagProp
                 ? string.Join(", ", tagProp.MultiSelect.Select(t => t.Name))
                 : "未設定";
 

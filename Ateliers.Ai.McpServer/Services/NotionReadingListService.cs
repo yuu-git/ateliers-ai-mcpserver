@@ -206,11 +206,11 @@ public class NotionReadingListService
                 ? selectProp.Select?.Name ?? "未設定"
                 : "未設定";
 
-            var priorityValue = props.ContainsKey("Priority") && props["Priority"] is SelectPropertyValue priorityProp
+            var priorityValue = props != null && props.ContainsKey("Priority") && props["Priority"] is SelectPropertyValue priorityProp
                 ? priorityProp.Select?.Name ?? "未設定"
                 : "未設定";
 
-            var typeValue = props.ContainsKey("Type") && props["Type"] is SelectPropertyValue typeProp
+            var typeValue = props != null && props.ContainsKey("Type") && props["Type"] is SelectPropertyValue typeProp
                 ? typeProp.Select?.Name ?? "未設定"
                 : "未設定";
 
